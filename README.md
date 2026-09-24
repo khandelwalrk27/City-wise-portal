@@ -1,6 +1,36 @@
 # CityWise Jaipur - Next-Gen Civic Issue Reporting & Resolution Platform
 
-CityWise is a connected full-stack civic resolution platform built specifically for **Nagar Nigam Greater & Heritage Jaipur**. It powers transparent civic complaint lifecycle management through automated GeoJSON point-in-polygon ward routing, department authority assignment, real-time Socket.IO notifications, side-by-side resolution proof inspection, and mandatory citizen verification.
+CityWise is a connected full-stack civic resolution platform built specifically for **Nagar Nigam Greater & Heritage Jaipur**. It powers transparent civic complaint lifecycle management through automated GeoJSON point-in-polygon ward routing, department authority assignment, real-time Socket.IO notifications, live camera evidence capture, side-by-side resolution proof inspection, and mandatory citizen verification.
+
+---
+
+## ⚡ Supabase PostgreSQL Database Setup
+
+CityWise natively supports **Supabase PostgreSQL** alongside its built-in SQLite engine.
+
+### 1. Create a Supabase Project
+1. Sign up / Log in to [Supabase Dashboard](https://supabase.com/dashboard).
+2. Click **New Project** and name it `citywise-jaipur`.
+
+### 2. Apply Schema Migration
+1. Open your project's **SQL Editor** in Supabase Dashboard.
+2. Open `data/supabase_schema.sql` from this repository.
+3. Paste the entire SQL script into the Supabase SQL Editor and click **Run**.
+
+### 3. Set Environment Variables
+Copy `.env.example` to `.env` in the `backend/` directory:
+```env
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+### 4. Seed Supabase Database
+Run the automated Supabase seeder to populate Jaipur Parshads and initial civic complaints:
+```bash
+cd backend
+npm run seed:supabase
+```
 
 ---
 
@@ -28,7 +58,7 @@ ASSIGN AUTHORITY (Department Lookup: PWD Roads, PHED Water, Sanitation)
   ↓
 ACT (Authority Status: IN_PROGRESS)
   ↓
-SUBMIT RESOLUTION (Authority Uploads Photo/Video Proof)
+SUBMIT RESOLUTION (Authority Uploads Live Camera Photo/Video Proof)
   ↓
 CITIZEN VERIFY (Citizen Approves or Reopens with Remarks)
   ↓
@@ -39,9 +69,9 @@ CLOSE (Verified Resolution)
 
 ## 💻 Tech Stack
 
-- **Frontend**: React 18, Vite, Tailwind CSS, React Router v6, React Leaflet (OpenStreetMap), Recharts, Socket.IO Client, Axios, Lucide Icons.
-- **Backend**: Node.js, Express.js, SQLite, Socket.IO Server, JWT, bcryptjs, Multer, Turf.js (`@turf/boolean-point-in-polygon`).
-- **Data & Testing**: GeoJSON Ward Polygons (`data/wards.geojson`), Native Node.js Test Runner (`node --test`).
+- **Frontend**: React 18, Vite, Tailwind CSS, React Router v6, React Leaflet (OpenStreetMap), Recharts, Socket.IO Client, Axios, Lucide Icons, MediaDevices WebRTC Camera Capture.
+- **Backend**: Node.js, Express.js, Supabase JS Client (`@supabase/supabase-js`), SQLite, Socket.IO Server, JWT, bcryptjs, Multer, Turf.js (`@turf/boolean-point-in-polygon`).
+- **Data & Testing**: Supabase SQL Schema (`data/supabase_schema.sql`), GeoJSON Ward Polygons (`data/wards.geojson`), Native Node.js Test Runner (`node --test`).
 
 ---
 
@@ -52,7 +82,7 @@ CityWIse/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/     # Navbar, Footer, MapPicker, StatusBadge, IssueTimeline, ResolutionEvidenceViewer
+│   │   ├── components/     # CameraCapture, Navbar, Footer, MapPicker, StatusBadge, IssueTimeline, ResolutionEvidenceViewer, PredictiveRiskWidget
 │   │   ├── context/        # AuthContext, SocketContext
 │   │   ├── pages/          # Landing, About, Community, PublicMap, Login, Register, Dashboards, Admin
 │   │   └── services/       # Axios API client
@@ -64,15 +94,16 @@ CityWIse/
 │   ├── database/           # citywise.sqlite
 │   ├── uploads/            # Uploaded photos & videos
 │   ├── src/
-│   │   ├── config/         # DB schema & tables
+│   │   ├── config/         # DB schema & Supabase client (supabaseDb.js)
 │   │   ├── middleware/     # Auth JWT, RBAC, Multer upload
-│   │   ├── routes/         # Auth, Wards, Authorities, Categories, Issues, Incidents, Notifications, Analytics, AI, Seed
-│   │   ├── services/       # Ward GeoJSON detection, Authority routing, Status Machine, Duplicate Grouping, AI Advisory
-│   │   └── seed/           # Jaipur Parshad demo seeder
+│   │   ├── routes/         # Auth, Wards, Authorities, Categories, Issues, Incidents, Notifications, Analytics, AI, Seed, Predictive
+│   │   ├── services/       # Ward GeoJSON detection, Authority routing, Status Machine, Duplicate Grouping, AI Advisory, Weather Predictive Service
+│   │   └── seed/           # Jaipur Parshad demo seeder (seedData.js & seedSupabase.js)
 │   ├── server.js
 │   └── package.json
 │
 ├── data/
+│   ├── supabase_schema.sql # Official Supabase PostgreSQL schema migration
 │   └── wards.geojson       # Official Jaipur municipal ward polygons & Parshad details
 │
 ├── tests/
@@ -104,15 +135,16 @@ CityWIse/
 ```bash
 cd backend
 npm install
-npm run seed     # Seeds SQLite database with Jaipur Parshads and issues
-npm start        # Runs Express & Socket.IO server on http://localhost:5000
+npm run seed             # Seeds local SQLite database
+npm run seed:supabase    # (Optional) Seeds Supabase PostgreSQL if SUPABASE_URL is configured
+npm start                # Runs Express & Socket.IO server on http://localhost:5000
 ```
 
 ### 2. Frontend Application Setup (Open a second terminal)
 ```bash
 cd frontend
 npm install
-npm run dev      # Runs Vite dev server on http://localhost:3000
+npm run dev              # Runs Vite dev server on http://localhost:3000
 ```
 
 ---
@@ -136,8 +168,9 @@ Run the automated integration test suite:
 node --test tests/citywise.test.js
 ```
 Tests cover:
-- SQLite schema initialization
+- Database schema & Supabase compatibility
 - GeoJSON Point-in-polygon ward detection
 - Ward-to-Authority department lookup
 - Status machine transition validation
 - Duplicate issue spatial grouping
+- Live Weather API integration & Predictive Risk correlation

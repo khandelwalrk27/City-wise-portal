@@ -2,6 +2,7 @@ const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const path = require('path');
 const fs = require('fs');
+const { isSupabaseConfigured, getSupabaseClient } = require('./supabaseDb');
 
 let dbInstance = null;
 
@@ -20,7 +21,7 @@ async function getDB() {
     driver: sqlite3.Database
   });
 
-  // Enable foreign keys
+  // Enable foreign keys for SQLite
   await dbInstance.run('PRAGMA foreign_keys = ON;');
 
   await initTables(dbInstance);
@@ -72,7 +73,7 @@ async function initTables(db) {
     );
   `);
 
-  // Ward-Authority Mapping table (Ward + Category -> Responsible Authority)
+  // Ward-Authority Mapping table
   await db.exec(`
     CREATE TABLE IF NOT EXISTS ward_authorities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -146,7 +147,7 @@ async function initTables(db) {
     );
   `);
 
-  // Media table (for original report images/videos & resolution evidence)
+  // Media table
   await db.exec(`
     CREATE TABLE IF NOT EXISTS media (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -176,7 +177,7 @@ async function initTables(db) {
     );
   `);
 
-  // Citizen Community Supports/Upvotes table
+  // Supports table
   await db.exec(`
     CREATE TABLE IF NOT EXISTS supports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -205,7 +206,7 @@ async function initTables(db) {
     );
   `);
 
-  // Create Indexes for performance
+  // Indexes for performance
   await db.exec(`
     CREATE INDEX IF NOT EXISTS idx_issues_citizen ON issues(citizen_id);
     CREATE INDEX IF NOT EXISTS idx_issues_authority ON issues(authority_id);
@@ -217,4 +218,8 @@ async function initTables(db) {
   `);
 }
 
-module.exports = { getDB };
+module.exports = { 
+  getDB,
+  isSupabaseConfigured,
+  getSupabaseClient
+};
