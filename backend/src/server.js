@@ -57,8 +57,21 @@ app.use('/api/predictive', predictiveRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'CiviResolve API', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', service: 'CityWise Jaipur API', timestamp: new Date().toISOString() });
 });
+
+// Serve compiled Frontend static build in production if dist directory exists
+const fs = require('fs');
+const distDir = path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.join(distDir, 'index.html'));
+  });
+}
 
 // Socket.IO Room connections
 io.on('connection', (socket) => {
@@ -108,7 +121,7 @@ async function startServer() {
 
     server.listen(PORT, () => {
       console.log(`====================================================`);
-      console.log(`CiviResolve Backend Running on http://localhost:${PORT}`);
+      console.log(`CityWise Jaipur Backend Running on http://localhost:${PORT}`);
       console.log(`Real-Time Socket.IO Server active.`);
       console.log(`====================================================`);
     });
