@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import MapPicker from '../components/MapPicker';
 import api from '../services/api';
-import { MapPin, Filter, Layers } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 export default function PublicMapPage() {
   const [issues, setIssues] = useState([]);
@@ -27,11 +27,11 @@ export default function PublicMapPage() {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-            <MapPin className="w-7 h-7 text-indigo-400" />
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+            <MapPin className="w-7 h-7 text-indigo-600" />
             Nagar Nigam Jaipur Interactive GeoJSON Map
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Click on ward boundary polygons to inspect Parshad names & details, or click on issue pins to view reported complaint details.
           </p>
         </div>
@@ -41,7 +41,7 @@ export default function PublicMapPage() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
+            className="bg-white border border-slate-300 text-slate-700 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           >
             <option value="">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -50,7 +50,7 @@ export default function PublicMapPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
+            className="bg-white border border-slate-300 text-slate-700 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           >
             <option value="">All Statuses</option>
             <option value="REPORTED">Reported</option>
@@ -68,3 +68,4 @@ export default function PublicMapPage() {
     </div>
   );
 }
+

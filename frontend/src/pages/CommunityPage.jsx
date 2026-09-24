@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Filter, ThumbsUp, MapPin, Sparkles, Building2 } from 'lucide-react';
+import { Search, Filter, ThumbsUp, MapPin } from 'lucide-react';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import { useAuth } from '../context/AuthContext';
@@ -73,23 +73,23 @@ export default function CommunityPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
       <div>
-        <h1 className="text-3xl font-extrabold text-white">Jaipur Civic Community</h1>
-        <p className="text-xs text-slate-400 mt-1">Explore reported issues across Jaipur municipal wards and upvote issues requiring urgent attention.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Jaipur Civic Community</h1>
+        <p className="text-xs text-slate-500 mt-1">Explore reported issues across Jaipur municipal wards and upvote issues requiring urgent attention.</p>
       </div>
 
       {/* Filters & Search */}
-      <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between">
         
         {/* Search Input */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
             placeholder="Search Jaipur issues..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && fetchIssues()}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-white border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           />
         </div>
 
@@ -98,7 +98,7 @@ export default function CommunityPage() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
+            className="bg-white border border-slate-300 text-slate-700 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           >
             <option value="">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -107,7 +107,7 @@ export default function CommunityPage() {
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
+            className="bg-white border border-slate-300 text-slate-700 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           >
             <option value="">All Statuses</option>
             <option value="REPORTED">Reported</option>
@@ -121,7 +121,7 @@ export default function CommunityPage() {
           <select
             value={selectedWard}
             onChange={(e) => setSelectedWard(e.target.value)}
-            className="bg-slate-900 border border-slate-800 text-slate-300 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
+            className="bg-white border border-slate-300 text-slate-700 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
           >
             <option value="">All Jaipur Wards</option>
             {wards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -138,11 +138,11 @@ export default function CommunityPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {issues.map(issue => (
-            <div key={issue.id} className="glass-card rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-800 hover:border-indigo-500/40 transition">
+            <div key={issue.id} className="bg-white rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-200 shadow-xs hover:border-slate-300 transition">
               
               {/* Optional Thumbnail Image */}
               {issue.primary_image && (
-                <div className="h-44 w-full bg-slate-900 overflow-hidden">
+                <div className="h-44 w-full bg-slate-100 overflow-hidden">
                   <img src={issue.primary_image} alt={issue.title} className="w-full h-full object-cover" />
                 </div>
               )}
@@ -150,13 +150,13 @@ export default function CommunityPage() {
               <div className="p-5 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <StatusBadge status={issue.status} />
-                  <span className="text-[10px] text-amber-400 font-semibold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
                     {issue.ward_name || 'Jaipur Ward'}
                   </span>
                 </div>
 
-                <h3 className="text-sm font-bold text-white line-clamp-1">{issue.title}</h3>
-                <p className="text-xs text-slate-400 line-clamp-2">{issue.description}</p>
+                <h3 className="text-sm font-bold text-slate-900 line-clamp-1">{issue.title}</h3>
+                <p className="text-xs text-slate-600 line-clamp-2">{issue.description}</p>
 
                 <div className="text-[11px] text-slate-500 flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
@@ -164,16 +164,16 @@ export default function CommunityPage() {
                 </div>
               </div>
 
-              <div className="px-5 py-3.5 bg-slate-950/60 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="px-5 py-3.5 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between text-xs">
                 <button
                   onClick={() => handleSupportToggle(issue.id)}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold transition"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-semibold transition"
                 >
-                  <ThumbsUp className="w-3.5 h-3.5 text-indigo-400" />
+                  <ThumbsUp className="w-3.5 h-3.5 text-indigo-600" />
                   <span>{issue.support_count || 0} Upvotes</span>
                 </button>
 
-                <Link to={`/issues/${issue.id}`} className="text-indigo-400 font-semibold hover:underline">
+                <Link to={`/issues/${issue.id}`} className="text-indigo-600 font-semibold hover:underline">
                   View Timeline &rarr;
                 </Link>
               </div>
@@ -186,3 +186,4 @@ export default function CommunityPage() {
     </div>
   );
 }
+

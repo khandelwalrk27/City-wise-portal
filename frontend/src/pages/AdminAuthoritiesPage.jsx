@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { Shield, PlusCircle, Link as LinkIcon } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
 export default function AdminAuthoritiesPage() {
   const [authorities, setAuthorities] = useState([]);
@@ -30,11 +30,11 @@ export default function AdminAuthoritiesPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
       <div>
-        <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-          <Shield className="w-7 h-7 text-purple-400" />
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+          <Shield className="w-7 h-7 text-purple-600" />
           Municipal Authority Departments & Routing
         </h1>
-        <p className="text-xs text-slate-400 mt-1">Manage department officer assignments and ward-to-authority category mappings.</p>
+        <p className="text-xs text-slate-500 mt-1">Manage department officer assignments and ward-to-authority category mappings across Jaipur.</p>
       </div>
 
       {loading ? (
@@ -43,13 +43,13 @@ export default function AdminAuthoritiesPage() {
         <div className="space-y-8">
           
           {/* Authorities List */}
-          <div className="glass-panel rounded-2xl overflow-hidden border border-slate-800">
-            <div className="p-4 bg-slate-900 border-b border-slate-800 font-bold text-white text-sm">
+          <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-900 text-sm">
               Registered Municipal Authorities
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200 text-[11px]">
                   <tr>
                     <th className="p-4">Code</th>
                     <th className="p-4">Department Name</th>
@@ -59,15 +59,19 @@ export default function AdminAuthoritiesPage() {
                     <th className="p-4">Assigned Issues</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80">
+                <tbody className="divide-y divide-slate-100">
                   {authorities.map(a => (
-                    <tr key={a.id} className="hover:bg-slate-900/40">
-                      <td className="p-4 font-mono font-bold text-purple-400">{a.code}</td>
-                      <td className="p-4 font-bold text-white">{a.name}</td>
-                      <td className="p-4">{a.department}</td>
-                      <td className="p-4 text-cyan-300">{a.contact_email}</td>
-                      <td className="p-4">{a.phone}</td>
-                      <td className="p-4 font-bold text-indigo-400">{a.assigned_issues_count || 0}</td>
+                    <tr key={a.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-4 font-mono font-bold text-purple-800">
+                        <span className="px-2 py-0.5 bg-purple-50 border border-purple-200 rounded">
+                          {a.code}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-slate-900">{a.name}</td>
+                      <td className="p-4 text-slate-600">{a.department}</td>
+                      <td className="p-4 text-indigo-600 font-medium">{a.contact_email}</td>
+                      <td className="p-4 text-slate-600">{a.phone}</td>
+                      <td className="p-4 font-bold text-indigo-700">{a.assigned_issues_count || 0}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -76,25 +80,29 @@ export default function AdminAuthoritiesPage() {
           </div>
 
           {/* Ward-Authority Mappings */}
-          <div className="glass-panel rounded-2xl overflow-hidden border border-slate-800">
-            <div className="p-4 bg-slate-900 border-b border-slate-800 font-bold text-white text-sm flex items-center justify-between">
+          <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-xs">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 font-bold text-slate-900 text-sm flex items-center justify-between">
               <span>Configured Ward-Authority Department Mappings</span>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-950 text-slate-400 uppercase font-semibold border-b border-slate-800">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200 text-[11px]">
                   <tr>
                     <th className="p-4">Ward</th>
                     <th className="p-4">Category</th>
                     <th className="p-4">Responsible Authority Department</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/80">
+                <tbody className="divide-y divide-slate-100">
                   {mappings.map(m => (
-                    <tr key={m.id} className="hover:bg-slate-900/40">
-                      <td className="p-4 font-bold text-amber-400">{m.ward_name} ({m.ward_code})</td>
-                      <td className="p-4 text-slate-200">{m.category_name || 'All Categories'}</td>
-                      <td className="p-4 font-semibold text-purple-300">{m.authority_name} ({m.department})</td>
+                    <tr key={m.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-4 font-bold text-amber-800">
+                        <span className="px-2 py-0.5 bg-amber-50 border border-amber-200 rounded">
+                          {m.ward_name} ({m.ward_code})
+                        </span>
+                      </td>
+                      <td className="p-4 text-slate-700 font-medium">{m.category_name || 'All Categories'}</td>
+                      <td className="p-4 font-semibold text-purple-800">{m.authority_name} ({m.department})</td>
                     </tr>
                   ))}
                 </tbody>
@@ -108,3 +116,4 @@ export default function AdminAuthoritiesPage() {
     </div>
   );
 }
+
