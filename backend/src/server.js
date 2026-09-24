@@ -20,6 +20,8 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const seedRoutes = require('./routes/seedRoutes');
 const predictiveRoutes = require('./routes/predictiveRoutes');
+const databaseRoutes = require('./routes/databaseRoutes');
+const { isSupabaseConfigured } = require('./config/supabaseDb');
 
 const app = express();
 const server = http.createServer(app);
@@ -54,6 +56,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/seed', seedRoutes);
 app.use('/api/predictive', predictiveRoutes);
+app.use('/api/database', databaseRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -123,6 +126,11 @@ async function startServer() {
       console.log(`====================================================`);
       console.log(`CityWise Jaipur Backend Running on http://localhost:${PORT}`);
       console.log(`Real-Time Socket.IO Server active.`);
+      if (isSupabaseConfigured()) {
+        console.log(`Supabase PostgreSQL configured: ${process.env.SUPABASE_URL}`);
+      } else {
+        console.log(`Storage Engine: Local SQLite (Configure SUPABASE_URL to link Supabase)`);
+      }
       console.log(`====================================================`);
     });
   } catch (err) {

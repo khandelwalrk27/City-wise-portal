@@ -9,6 +9,7 @@
     "dev": "node --watch src/server.js",
     "seed": "node src/seed/seedData.js",
     "seed:supabase": "node src/seed/seedSupabase.js",
+    "test:supabase": "node src/scripts/testSupabase.js",
     "test": "node --test tests/**/*.test.js"
   },
   "dependencies": {
