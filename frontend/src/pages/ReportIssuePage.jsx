@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import MapPicker from '../components/MapPicker';
 import CameraCapture from '../components/CameraCapture';
-import { MapPin, Sparkles, Building2, AlertCircle, CheckCircle2, ShieldCheck, Camera } from 'lucide-react';
+import { MapPin, Sparkles, Building2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function ReportIssuePage() {
   const navigate = useNavigate();
@@ -149,12 +149,12 @@ export default function ReportIssuePage() {
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-8">
       
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Report Civic Issue</h1>
-        <p className="text-xs text-slate-400 mt-1">Capture live evidence photos or videos, select map location, and submit to Nagar Nigam Jaipur database.</p>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Report Civic Issue</h1>
+        <p className="text-xs text-slate-500 mt-1 font-medium">Capture live evidence photos or videos, select map location, and submit to Nagar Nigam Jaipur database.</p>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs font-semibold">
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-bold">
           {error}
         </div>
       )}
@@ -162,30 +162,30 @@ export default function ReportIssuePage() {
       <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
         {/* Left Column: Form details & Live Camera */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-5">
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-5">
           
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">Issue Title</label>
+            <label className="block text-xs font-bold text-slate-800 mb-1">Issue Title</label>
             <input
               type="text"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Deep crater pothole near WTP Circle"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-slate-300">Detailed Description</label>
+              <label className="block text-xs font-bold text-slate-800">Detailed Description</label>
               <button
                 type="button"
                 onClick={handleAiSuggest}
                 disabled={aiLoading}
-                className="text-[11px] font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20"
+                className="text-[11px] font-bold text-amber-900 hover:text-amber-950 flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"
               >
-                <Sparkles className="w-3 h-3 text-amber-400" />
+                <Sparkles className="w-3 h-3 text-amber-600" />
                 {aiLoading ? 'Analyzing...' : 'Auto-Suggest Category'}
               </button>
             </div>
@@ -195,10 +195,10 @@ export default function ReportIssuePage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the issue, road hazard, waterlogging depth, or odor level..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 font-medium"
             />
             {aiExplanation && (
-              <p className="text-[11px] text-amber-300 mt-1 italic">
+              <p className="text-[11px] text-amber-900 mt-1 italic font-medium">
                 {aiExplanation}
               </p>
             )}
@@ -206,22 +206,22 @@ export default function ReportIssuePage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Category</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Category</label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600"
               >
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Priority</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-indigo-600"
               >
                 <option value="LOW">Low Priority</option>
                 <option value="MEDIUM">Medium Priority</option>
@@ -231,7 +231,7 @@ export default function ReportIssuePage() {
             </div>
           </div>
 
-          {/* Live Camera Capture Interface */}
+          {/* Live Camera Capture Component */}
           <div>
             <CameraCapture onMediaCaptured={setCapturedFiles} />
           </div>
@@ -239,39 +239,39 @@ export default function ReportIssuePage() {
         </div>
 
         {/* Right Column: GeoJSON Ward Engine & Location Map */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl space-y-5 flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-5 flex flex-col justify-between">
           
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-indigo-400" />
+              <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <MapPin className="w-4 h-4 text-indigo-600" />
                 Map Location Selector
               </label>
-              <span className="text-[10px] text-slate-400 font-mono">Lat: {position.lat.toFixed(4)}, Lng: {position.lng.toFixed(4)}</span>
+              <span className="text-[10px] text-slate-500 font-mono font-bold">Lat: {position.lat.toFixed(4)}, Lng: {position.lng.toFixed(4)}</span>
             </div>
 
             <MapPicker selectedPosition={position} onLocationSelect={handleLocationSelect} height="260px" />
 
             {/* GeoJSON Ward Engine Banner */}
-            <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-xs space-y-1">
-              <div className="font-semibold text-slate-300 flex items-center gap-1.5">
-                <Building2 className="w-4 h-4 text-amber-400" />
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+              <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                <Building2 className="w-4 h-4 text-amber-600" />
                 GeoJSON Ward Routing:
               </div>
               {detectedWard ? (
-                <div className="text-emerald-400 font-semibold flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className="text-emerald-800 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                   Auto-Detected: {detectedWard.name} ({detectedWard.code})
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="text-amber-400 font-medium text-[11px]">
+                  <div className="text-amber-900 font-bold text-[11px]">
                     Coordinates outside boundary. Select Jaipur Ward manually:
                   </div>
                   <select
                     value={manualWardId}
                     onChange={(e) => setManualWardId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 text-xs text-white rounded-lg px-2.5 py-1.5 focus:outline-none"
+                    className="w-full bg-white border border-slate-200 text-xs text-slate-900 rounded-lg px-2.5 py-1.5 focus:outline-none"
                   >
                     <option value="">-- Select Jaipur Ward --</option>
                     {wards.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -284,7 +284,7 @@ export default function ReportIssuePage() {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
+            className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition disabled:opacity-50"
           >
             {submitting ? 'Submitting to Database...' : 'Submit Issue & Save'}
           </button>

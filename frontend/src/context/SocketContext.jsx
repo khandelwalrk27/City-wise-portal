@@ -47,15 +47,15 @@ export const SocketProvider = ({ children }) => {
     <SocketContext.Provider value={{ socket, toastNotification, setToastNotification }}>
       {children}
       {toastNotification && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-indigo-950/90 border border-indigo-500/40 text-white p-4 rounded-xl shadow-2xl backdrop-blur-md animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 max-w-sm bg-white border border-indigo-200 text-slate-900 p-4 rounded-xl shadow-lg border-l-4 border-l-indigo-600 animate-bounce">
           <div className="flex items-start justify-between">
             <div>
-              <h4 className="font-semibold text-indigo-300 text-sm">{toastNotification.title}</h4>
-              <p className="text-xs text-slate-300 mt-1">{toastNotification.message}</p>
+              <h4 className="font-semibold text-indigo-900 text-sm">{toastNotification.title}</h4>
+              <p className="text-xs text-slate-600 mt-1">{toastNotification.message}</p>
             </div>
             <button 
               onClick={() => setToastNotification(null)}
-              className="text-slate-400 hover:text-white text-sm font-bold ml-3"
+              className="text-slate-400 hover:text-slate-700 text-sm font-bold ml-3"
             >
               ✕
             </button>
