@@ -256,6 +256,29 @@ async function generatePredictiveCivicRisks() {
       totalWardsMonitored: 9
     },
     predictiveRisks: predictions,
+    civicLayers: {
+      aqiStations: [
+        { id: 'aqi-sitapura', name: 'Sitapura Industrial Area', lat: 26.7820, lng: 75.8340, aqi: 182, category: 'POOR', dominantPollutant: 'PM2.5 (78 µg/m³)', wardName: 'Ward 70 - Sanganer Town', healthAdvice: 'Sensitive individuals should reduce outdoor physical exertion.' },
+        { id: 'aqi-mi-road', name: 'MI Road Central Commercial', lat: 26.9180, lng: 75.8080, aqi: 142, category: 'MODERATE', dominantPollutant: 'Vehicular CO/NO2', wardName: 'Ward 125 - Central', healthAdvice: 'Air quality is acceptable; unusually sensitive individuals may notice symptoms.' },
+        { id: 'aqi-mansarovar', name: 'Mansarovar Sector 7', lat: 26.8580, lng: 75.7600, aqi: 88, category: 'SATISFACTORY', dominantPollutant: 'PM10 (45 µg/m³)', wardName: 'Ward 125 - Malviya Nagar', healthAdvice: 'Clean ambient airflow across residential greens.' },
+        { id: 'aqi-jhotwara', name: 'Jhotwara Industrial Zone', lat: 26.9450, lng: 75.7480, aqi: 168, category: 'MODERATE', dominantPollutant: 'Suspended Dust / PM2.5', wardName: 'Ward 43 - Jhotwara North', healthAdvice: 'Wear a dust mask near active freight corridors.' },
+        { id: 'aqi-vidhyadhar', name: 'Vidhyadhar Nagar Sector 2', lat: 26.9620, lng: 75.7740, aqi: 64, category: 'GOOD', dominantPollutant: 'Clean Air', wardName: 'Ward 1 - Vidhyadhar Nagar', healthAdvice: 'Ideal air quality for outdoor exercises.' }
+      ],
+      trafficCorridors: [
+        { id: 'trf-tonk-road', name: 'Tonk Road & Gopalpura Flyover', lat: 26.8620, lng: 75.8050, delayText: '+18 min delay', delayMinutes: 18, avgSpeedKmh: 14, severity: 'HIGH', status: 'HEAVY_CONGESTION', cause: 'Waterlogging & bottleneck lane merge', wardName: 'Ward 125 - Malviya Nagar' },
+        { id: 'trf-jln-marg', name: 'JLN Marg (WTP Apex Circle)', lat: 26.8650, lng: 75.8120, delayText: '+11 min delay', delayMinutes: 11, avgSpeedKmh: 22, severity: 'MEDIUM', status: 'MODERATE_DELAY', cause: 'Office peak hour transit cycle', wardName: 'Ward 125 - Malviya Nagar' },
+        { id: 'trf-khatipura', name: 'Khatipura Junction & Ajmer Rd', lat: 26.8920, lng: 75.7350, delayText: '+22 min delay', delayMinutes: 22, avgSpeedKmh: 11, severity: 'HIGH', status: 'SEVERE_SLOWDOWN', cause: 'Road surface craters & transport truck queue', wardName: 'Ward 43 - Jhotwara North' },
+        { id: 'trf-bagru-toll', name: 'Bagru Expressway Tollway', lat: 26.8150, lng: 75.5450, delayText: '+5 min delay', delayMinutes: 5, avgSpeedKmh: 48, severity: 'LOW', status: 'NORMAL_FLOW', cause: 'Fast tag toll lane processing', wardName: 'Ward 104 - Bagru' }
+      ],
+      powerOutages: [
+        { id: 'pwr-malviya-3', name: 'Malviya Nagar Feeder-4 (Sector 3 & 5)', lat: 26.8510, lng: 75.8190, status: 'SCHEDULED_MAINTENANCE', duration: '14:00 - 16:30 IST', householdsAffected: 450, department: 'JVVNL Jaipur Discom', reason: 'Substation transformer oil overhaul & line clearing', wardName: 'Ward 125 - Malviya Nagar' },
+        { id: 'pwr-sanganer-12', name: 'Sanganer Town Feeder-12', lat: 26.8190, lng: 75.7780, status: 'UNPLANNED_FAULT', duration: 'Restoration ETA: 35 min', householdsAffected: 780, department: 'JVVNL Jaipur Discom', reason: 'High wind contact on 11kV overhead distribution cable', wardName: 'Ward 70 - Sanganer Town' }
+      ],
+      weatherAlerts: [
+        { id: 'wth-runoff-jhotwara', name: 'Jhotwara Low-Lying Underpass', lat: 26.9380, lng: 75.7520, risk: 'Water Inundation Alert', severity: 'HIGH', precipitationForecast: `${rainMm} mm`, description: 'Stormwater accumulation risk in underpass basin. Drivers advised to detour.', wardName: 'Ward 43 - Jhotwara North' },
+        { id: 'wth-runoff-bagru', name: 'Bagru Catchment Basin', lat: 26.8220, lng: 75.5520, risk: 'Slow Drainage Runoff', severity: 'MEDIUM', precipitationForecast: `${rainMm} mm`, description: 'Slow soil absorption near industrial highway culverts.', wardName: 'Ward 104 - Bagru' }
+      ]
+    },
     generatedAt: new Date().toISOString()
   };
 }

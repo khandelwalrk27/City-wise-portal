@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
+import CivicInteractiveMap from '../components/CivicInteractiveMap';
 import { PlusCircle, AlertTriangle, CheckCircle2, Clock, ArrowRight, ShieldAlert } from 'lucide-react';
 
 export default function CitizenDashboard() {
@@ -112,6 +113,11 @@ export default function CitizenDashboard() {
           <div className="text-3xl font-extrabold text-emerald-800">{stats.closed}</div>
         </div>
       </div>
+
+      {/* Prominent Large Interactive Civic Map */}
+      <CivicInteractiveMap 
+        title="Jaipur Live Civic Operations & Multi-Feed Map" 
+      />
 
       {/* Predictive Weather & Risk Engine */}
       <PredictiveRiskWidget />

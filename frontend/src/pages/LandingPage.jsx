@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, MapPin, AlertTriangle, Activity, Camera, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 import api from '../services/api';
-import MapPicker from '../components/MapPicker';
+import CivicInteractiveMap from '../components/CivicInteractiveMap';
 import StatusBadge from '../components/StatusBadge';
 import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
 
@@ -81,24 +81,9 @@ export default function LandingPage() {
         <PredictiveRiskWidget />
       </section>
 
-      {/* Interactive Map Showcase */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-indigo-600" />
-              Jaipur Municipal Ward Boundary Map
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Select coordinates anywhere on the map to trigger automated GeoJSON point-in-polygon ward routing.
-            </p>
-          </div>
-          <Link to="/map" className="text-xs font-bold text-indigo-600 hover:underline flex items-center gap-1">
-            View Full Screen Map &rarr;
-          </Link>
-        </div>
-
-        <MapPicker issues={recentIssues} height="460px" />
+      {/* Large Dedicated Interactive Map Showcase */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <CivicInteractiveMap title="Jaipur Civic Operations & Real-Time Spatial Feeds" />
       </section>
 
       {/* Workflow Features */}
