@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
 import { PlusCircle, AlertTriangle, CheckCircle2, Clock, MapPin, ArrowRight, ShieldAlert } from 'lucide-react';
 
 export default function CitizenDashboard() {
@@ -111,6 +112,9 @@ export default function CitizenDashboard() {
           <div className="text-3xl font-extrabold text-emerald-400">{stats.closed}</div>
         </div>
       </div>
+
+      {/* Predictive Weather & Civic Risk Engine */}
+      <PredictiveRiskWidget />
 
       {/* Recent Citizen Reports */}
       <div className="space-y-4">

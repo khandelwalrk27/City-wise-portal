@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
+import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
 import { Shield, Clock, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export default function AuthorityDashboard() {
@@ -75,6 +76,9 @@ export default function AuthorityDashboard() {
           <div className="text-3xl font-extrabold text-emerald-400 mt-1">{stats.closed}</div>
         </div>
       </div>
+
+      {/* Weather & Predictive Civic Intelligence */}
+      <PredictiveRiskWidget />
 
       {/* Assigned Issues Queue */}
       <div className="space-y-4">

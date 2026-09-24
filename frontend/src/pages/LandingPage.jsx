@@ -4,6 +4,7 @@ import { Building2, MapPin, ShieldCheck, ArrowRight, CheckCircle2, AlertTriangle
 import api from '../services/api';
 import MapPicker from '../components/MapPicker';
 import StatusBadge from '../components/StatusBadge';
+import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
 
 export default function LandingPage() {
   const [stats, setStats] = useState({ totalIssues: 24, resolvedIssues: 18, avgResolutionHours: 14.5 });
@@ -73,6 +74,11 @@ export default function LandingPage() {
           </div>
 
         </div>
+      </section>
+
+      {/* Live Weather & Predictive Civic Intelligence Widget */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PredictiveRiskWidget />
       </section>
 
       {/* Interactive Map Showcase */}

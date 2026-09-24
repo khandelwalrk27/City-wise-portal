@@ -19,6 +19,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const seedRoutes = require('./routes/seedRoutes');
+const predictiveRoutes = require('./routes/predictiveRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -52,6 +53,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/predictive', predictiveRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
