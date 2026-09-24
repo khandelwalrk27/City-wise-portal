@@ -10,7 +10,12 @@ export const SocketProvider = ({ children }) => {
   const [toastNotification, setToastNotification] = useState(null);
 
   useEffect(() => {
-    const newSocket = io(window.location.origin.replace('3000', '5000'), {
+    const defaultHost = window.location.origin.includes('localhost')
+      ? window.location.origin.replace('3000', '5000')
+      : window.location.origin;
+    const socketEndpoint = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || defaultHost;
+
+    const newSocket = io(socketEndpoint, {
       transports: ['websocket', 'polling']
     });
 
