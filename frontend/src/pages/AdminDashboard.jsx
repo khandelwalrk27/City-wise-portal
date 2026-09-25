@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
-import { Shield, Users, Building2, MapPin, RefreshCw, BarChart3, AlertTriangle } from 'lucide-react';
+import CivicInteractiveMap from '../components/CivicInteractiveMap';
+import { Shield, Users, Building2, MapPin, RefreshCw, BarChart3, AlertTriangle, Compass } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -81,6 +82,46 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* Jaipur Municipal Spatial Operations & Map Command Center */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold mb-1.5">
+              <Compass className="w-3.5 h-3.5 text-indigo-600" />
+              Municipal GIS Spatial Operations
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Jaipur 5-Zone Ward Map & Workload Optimization
+            </h2>
+            <p className="text-xs text-slate-500 font-medium">
+              Interactive GIS telemetry covering Vidhyadhar Nagar, Jhotwara, Sanganer, Bagru, and Malviya Nagar zones with real-time complaint density, weather, AQI, and corridor routing.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to="/admin/wards"
+              className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold border border-slate-300 transition flex items-center gap-1.5 shadow-xs"
+            >
+              <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Ward GeoJSON</span>
+            </Link>
+            <Link
+              to="/admin/authorities"
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+            >
+              <Shield className="w-3.5 h-3.5 text-white" />
+              <span>Dispatch Routing</span>
+            </Link>
+          </div>
+        </div>
+
+        <CivicInteractiveMap 
+          adminMode={true} 
+          title="Jaipur Nagar Nigam Municipal Spatial Command Center" 
+        />
+      </div>
 
       {/* Admin Modules Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

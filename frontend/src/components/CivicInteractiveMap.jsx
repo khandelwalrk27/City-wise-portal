@@ -102,11 +102,30 @@ const createPowerIcon = (status) => {
   });
 };
 
-export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipur Civic & Spatial Intelligence Map" }) {
+// Jaipur Municipal Corporation 5 Official Administrative Zones
+export const JAIPUR_ZONES = [
+  { id: 'ALL', name: 'All Jaipur Master', wardsRange: 'All 150 Wards', center: [26.9124, 75.7873], zoom: 12, desc: 'Citywide municipal oversight across Greater & Heritage Jaipur' },
+  { id: 'Vidhyadhar Nagar', name: 'Vidhyadhar Nagar', wardsRange: 'Wards 1–42', center: [26.9600, 75.7850], zoom: 13, desc: 'Sector 1-3, Central Market, Sikar Road corridor & Transport hub' },
+  { id: 'Jhotwara', name: 'Jhotwara Zone', wardsRange: 'Wards 43–64', center: [26.9350, 75.7450], zoom: 13, desc: 'Jhotwara Industrial Area, Khatipura Junction & Rail Overbridge' },
+  { id: 'Sanganer', name: 'Sanganer Zone', wardsRange: 'Wards 65–103', center: [26.8250, 75.8000], zoom: 13, desc: 'Nagar Nigam Greater HQ, Tonk Road, Airport Link & Textile Block' },
+  { id: 'Bagru', name: 'Bagru Zone', wardsRange: 'Wards 104–124', center: [26.8750, 75.7050], zoom: 13, desc: 'Ajmer Road Expressway, Mahindra SEZ & Suburban residential' },
+  { id: 'Malviya Nagar', name: 'Malviya Nagar', wardsRange: 'Wards 125–150', center: [26.8650, 75.8300], zoom: 13, desc: 'Calgiri Marg, World Trade Park, Apex Circle & Jagatpura' },
+];
+
+export default function CivicInteractiveMap({ 
+  initialIssues = [], 
+  title = "Jaipur Civic & Spatial Intelligence Map",
+  adminMode = false 
+}) {
   const [issues, setIssues] = useState(initialIssues);
   const [geojson, setGeojson] = useState(null);
   const [predictiveData, setPredictiveData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Jaipur Municipal Zone & Admin Filter State
+  const [selectedZone, setSelectedZone] = useState('ALL');
+  const [selectedWardCode, setSelectedWardCode] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'OPEN' | 'RESOLVED'
 
   // Active Map Layers
   const [activeLayers, setActiveLayers] = useState({
@@ -120,7 +139,7 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
 
   // Selected Area/Marker for Inspector Card
   const [selectedItem, setSelectedItem] = useState(null);
-  const [mapCenter, setMapCenter] = useState([26.8850, 75.7950]);
+  const [mapCenter, setMapCenter] = useState([26.9124, 75.7873]);
   const [mapZoom, setMapZoom] = useState(12);
 
   useEffect(() => {
@@ -156,38 +175,172 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
     if (item) setSelectedItem(item);
   };
 
-  // Ward polygon styling and interaction
-  const onEachWardFeature = (feature, layer) => {
+  // Switch Jaipur Municipal Zone
+  const handleZoneChange = (zoneObj) => {
+    setSelectedZone(zoneObj.id);
+    setSelectedWardCode(null);
+    focusLocation(zoneObj.center[0], zoneObj.center[1], zoneObj.zoom, null);
+  };
+
+  // Lookup map: Ward name/code -> Zone name
+  const wardToZoneMap = React.useMemo(() => {
+    const map = {};
+    if (geojson?.features) {
+      geojson.features.forEach(f => {
+        const props = f.properties || {};
+        if (props.name && props.zone) map[props.name.toLowerCase()] = props.zone;
+        if (props.code && props.zone) map[props.code.toLowerCase()] = props.zone;
+      });
+    }
+    return map;
+  }, [geojson]);
+
+  // Filtered issues based on zone, ward, and status
+  const displayedIssues = React.useMemo(() => {
+    return issues.filter(issue => {
+      // 1. Zone filter
+      if (selectedZone !== 'ALL') {
+        const issueZone = wardToZoneMap[issue.ward_name?.toLowerCase()] || 
+                          wardToZoneMap[issue.ward_code?.toLowerCase()] ||
+                          (issue.ward_name?.toLowerCase().includes(selectedZone.toLowerCase()) ? selectedZone : null);
+        if (issueZone && issueZone !== selectedZone) return false;
+      }
+
+      // 2. Specific Ward filter
+      if (selectedWardCode) {
+        if (issue.ward_code !== selectedWardCode && !issue.ward_name?.includes(selectedWardCode)) {
+          return false;
+        }
+      }
+
+      // 3. Status filter
+      if (statusFilter === 'OPEN' && issue.status === 'CLOSED') return false;
+      if (statusFilter === 'RESOLVED' && issue.status !== 'CLOSED') return false;
+
+      return true;
+    });
+  }, [issues, selectedZone, selectedWardCode, statusFilter, wardToZoneMap]);
+
+  // Zone-level Workload Optimization Metrics
+  const zoneStats = React.useMemo(() => {
+    const zoneIssues = issues.filter(i => {
+      if (selectedZone === 'ALL') return true;
+      const z = wardToZoneMap[i.ward_name?.toLowerCase()] || wardToZoneMap[i.ward_code?.toLowerCase()];
+      return z === selectedZone || i.ward_name?.toLowerCase().includes(selectedZone.toLowerCase());
+    });
+
+    const total = zoneIssues.length;
+    const open = zoneIssues.filter(i => i.status !== 'CLOSED').length;
+    const resolved = zoneIssues.filter(i => i.status === 'CLOSED').length;
+    const rate = total > 0 ? Math.round((resolved / total) * 100) : 100;
+
+    let workloadStatus = 'OPTIMAL CAPACITY';
+    let statusColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    let tip = 'All municipal zones operating within SLA dispatch standards. Response crews active.';
+
+    if (open > 5) {
+      workloadStatus = 'HIGH BACKLOG HOTSPOT';
+      statusColor = 'bg-rose-50 text-rose-800 border-rose-200';
+      tip = 'Surge in civic reports detected. Recommend routing standby PWD & sanitation units.';
+    } else if (open > 2) {
+      workloadStatus = 'MODERATE DISPATCH LOAD';
+      statusColor = 'bg-amber-50 text-amber-800 border-amber-200';
+      tip = 'Active tickets being addressed. Verify technician resolution uploads.';
+    }
+
+    if (selectedZone === 'Vidhyadhar Nagar') {
+      tip = 'Sector 1-3 arterial drainage pumps ready. Parshad oversight active across 42 wards.';
+    } else if (selectedZone === 'Sanganer') {
+      tip = 'Tonk Road & Airport corridor priority zone. Rapid asphalt patch team on standby.';
+    } else if (selectedZone === 'Jhotwara') {
+      tip = 'Industrial transport line & Khatipura flyover streetlights under real-time monitoring.';
+    } else if (selectedZone === 'Bagru') {
+      tip = 'Ajmer Expressway feeder corridor. Monitor culvert stormwater runoffs.';
+    } else if (selectedZone === 'Malviya Nagar') {
+      tip = 'Calgiri Marg commercial density. High-frequency hopper dumpster routes operational.';
+    }
+
+    return { total, open, resolved, rate, workloadStatus, statusColor, tip };
+  }, [issues, selectedZone, wardToZoneMap]);
+
+  // Ward polygon styling with dynamic zone highlighting
+  const getWardStyle = (feature) => {
     const p = feature.properties || {};
-    
-    // Check if ward is marked in predictive risk
     const isAtRisk = (predictiveData?.predictiveRisks || []).some(r => 
       (r.affectedWards || []).some(w => w.includes(p.name) || w.includes(p.code))
     );
 
-    layer.setStyle({
+    const isSelectedWard = selectedWardCode && p.code === selectedWardCode;
+    const isSelectedZone = selectedZone === 'ALL' || p.zone === selectedZone;
+
+    if (isSelectedWard) {
+      return {
+        fillColor: '#f59e0b',
+        weight: 3.5,
+        opacity: 1.0,
+        color: '#b45309',
+        fillOpacity: 0.45
+      };
+    }
+
+    if (selectedZone !== 'ALL') {
+      if (isSelectedZone) {
+        return {
+          fillColor: isAtRisk ? '#f43f5e' : '#4f46e5',
+          weight: 2.5,
+          opacity: 0.95,
+          color: isAtRisk ? '#e11d48' : '#3730a3',
+          fillOpacity: isAtRisk ? 0.35 : 0.22
+        };
+      } else {
+        return {
+          fillColor: '#94a3b8',
+          weight: 1,
+          opacity: 0.25,
+          color: '#cbd5e1',
+          fillOpacity: 0.03
+        };
+      }
+    }
+
+    return {
       fillColor: isAtRisk ? '#f43f5e' : '#6366f1',
       weight: 1.5,
       opacity: 0.85,
       color: isAtRisk ? '#e11d48' : '#4f46e5',
       fillOpacity: isAtRisk ? 0.22 : 0.08
-    });
+    };
+  };
+
+  // Ward polygon click and interaction
+  const onEachWardFeature = (feature, layer) => {
+    const p = feature.properties || {};
+    
+    const isAtRisk = (predictiveData?.predictiveRisks || []).some(r => 
+      (r.affectedWards || []).some(w => w.includes(p.name) || w.includes(p.code))
+    );
 
     layer.on({
       mouseover: (e) => {
-        e.target.setStyle({ fillOpacity: isAtRisk ? 0.38 : 0.22, weight: 2.5 });
+        if (!selectedWardCode || selectedWardCode === p.code) {
+          e.target.setStyle({ fillOpacity: isAtRisk ? 0.42 : 0.30, weight: 3 });
+        }
       },
       mouseout: (e) => {
-        e.target.setStyle({ fillOpacity: isAtRisk ? 0.22 : 0.08, weight: 1.5 });
+        layer.setStyle(getWardStyle(feature));
       },
       click: () => {
+        setSelectedWardCode(p.code);
         setSelectedItem({
           type: 'WARD',
           title: `${p.name} (${p.code})`,
+          code: p.code,
           zone: p.zone || 'Jaipur Municipal Corporation',
           parshadName: p.parshad_name || 'Elected Ward Representative',
           parshadPhone: p.parshad_phone,
           party: p.party,
+          population: p.population,
+          area_sq_km: p.area_sq_km,
           description: p.description,
           isAtRisk,
           riskAlert: isAtRisk ? 'High precipitation runoff & active civic report surge' : null
@@ -217,6 +370,11 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
                 <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-md">
                   LIVE CIVIC FEEDS
                 </span>
+                {adminMode && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 bg-rose-50 text-rose-800 border border-rose-200 rounded-md">
+                    NAGAR ADMIN OPTIMIZED
+                  </span>
+                )}
               </h2>
               <p className="text-xs text-slate-500 font-medium">
                 Real-time correlation of civic complaints, weather alerts, air quality, traffic delays, and power feeders.
@@ -237,76 +395,176 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
             <span className="hidden sm:inline">Refresh Feeds</span>
           </button>
           <button
-            onClick={() => focusLocation(26.8850, 75.7950, 12, null)}
+            onClick={() => {
+              setSelectedZone('ALL');
+              setSelectedWardCode(null);
+              focusLocation(26.9124, 75.7873, 12, null);
+            }}
             className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 shadow-xs flex items-center gap-1.5 transition"
             title="Reset to City Center"
           >
             <Maximize2 className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="hidden sm:inline">Reset View</span>
+            <span className="hidden sm:inline">Reset City View</span>
           </button>
         </div>
       </div>
 
-      {/* Layer Toggles & Filter Bar */}
-      <div className="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
-          <Layers className="w-3.5 h-3.5 text-indigo-600" />
-          Layers:
-        </span>
+      {/* Jaipur Municipal 5-Zone Quick Switcher */}
+      <div className="px-5 py-3 border-b border-slate-200 bg-slate-50/80">
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+            Jaipur Municipal Zones & Boundary Optimizer:
+          </span>
+          <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+            Click any zone to focus GIS viewport & inspect municipal load
+          </span>
+        </div>
 
-        {/* Complaints Toggle */}
-        <button
-          onClick={() => toggleLayer('complaints')}
-          className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.complaints ? 'bg-indigo-50 border-indigo-200 text-indigo-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
-        >
-          <span className="w-2 h-2 rounded-full bg-indigo-600" />
-          Complaints ({issues.length})
-        </button>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {JAIPUR_ZONES.map(z => {
+            const isActive = selectedZone === z.id;
+            return (
+              <button
+                key={z.id}
+                onClick={() => handleZoneChange(z)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
+                  isActive 
+                    ? 'bg-indigo-600 text-white shadow-xs' 
+                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                }`}
+              >
+                <span>{z.name}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
+                  isActive ? 'bg-indigo-700/80 text-indigo-100' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {z.wardsRange}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-        {/* Weather Alerts Toggle */}
-        <button
-          onClick={() => toggleLayer('weather')}
-          className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.weather ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
-        >
-          <span>⛈️</span>
-          Weather Risks ({(civicLayers.weatherAlerts || []).length})
-        </button>
+      {/* Municipal Workload & Optimization Telemetry Bar */}
+      <div className="px-5 py-2.5 bg-indigo-50/40 border-b border-indigo-100/70 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center flex-wrap gap-2.5">
+          <span className="font-bold text-slate-900">
+            {selectedZone === 'ALL' ? 'Jaipur Master Jurisdiction' : `${selectedZone} Municipal Sector`}
+          </span>
+          <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${zoneStats.statusColor}`}>
+            {zoneStats.workloadStatus}
+          </span>
+          <span className="text-slate-500 hidden sm:inline">•</span>
+          <span className="text-slate-600 font-medium hidden sm:inline">
+            {zoneStats.tip}
+          </span>
+        </div>
 
-        {/* AQI Toggle */}
-        <button
-          onClick={() => toggleLayer('aqi')}
-          className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.aqi ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
-        >
-          <span>🌫️</span>
-          AQI Air Quality ({(civicLayers.aqiStations || []).length})
-        </button>
+        <div className="flex items-center gap-3 text-[11px] font-bold text-slate-700 shrink-0">
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400 font-normal">Active Backlog:</span>
+            <span className="text-amber-700 px-1.5 py-0.2 bg-amber-50 rounded border border-amber-200">{zoneStats.open}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400 font-normal">Resolved:</span>
+            <span className="text-emerald-700 px-1.5 py-0.2 bg-emerald-50 rounded border border-emerald-200">{zoneStats.resolved}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400 font-normal">SLA Compliance:</span>
+            <span className="text-indigo-700 px-1.5 py-0.2 bg-indigo-50 rounded border border-indigo-200">{zoneStats.rate}%</span>
+          </div>
+          {selectedWardCode && (
+            <button
+              onClick={() => setSelectedWardCode(null)}
+              className="text-[10px] text-rose-600 hover:text-rose-800 underline font-semibold ml-1"
+            >
+              Clear Ward Filter ({selectedWardCode})
+            </button>
+          )}
+        </div>
+      </div>
 
-        {/* Traffic Toggle */}
-        <button
-          onClick={() => toggleLayer('traffic')}
-          className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.traffic ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
-        >
-          <span>🚗</span>
-          Traffic Delays ({(civicLayers.trafficCorridors || []).length})
-        </button>
+      {/* Layer Toggles & Status Filter Bar */}
+      <div className="px-5 py-3 border-b border-slate-200 bg-white flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+            <Layers className="w-3.5 h-3.5 text-indigo-600" />
+            Layers:
+          </span>
 
-        {/* Power Outages Toggle */}
-        <button
-          onClick={() => toggleLayer('power')}
-          className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.power ? 'bg-purple-50 border-purple-200 text-purple-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
-        >
-          <span>⚡</span>
-          Power Outages ({(civicLayers.powerOutages || []).length})
-        </button>
+          {/* Complaints Toggle */}
+          <button
+            onClick={() => toggleLayer('complaints')}
+            className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.complaints ? 'bg-indigo-50 border-indigo-200 text-indigo-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
+          >
+            <span className="w-2 h-2 rounded-full bg-indigo-600" />
+            Complaints ({displayedIssues.length})
+          </button>
 
-        {/* Ward Polygons Toggle */}
-        <button
-          onClick={() => toggleLayer('wards')}
-          className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.wards ? 'bg-cyan-50 border-cyan-200 text-cyan-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
-        >
-          <span>🏛️</span>
-          Ward Polygons
-        </button>
+          {/* Weather Alerts Toggle */}
+          <button
+            onClick={() => toggleLayer('weather')}
+            className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.weather ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
+          >
+            <span>⛈️</span>
+            Weather Risks ({(civicLayers.weatherAlerts || []).length})
+          </button>
+
+          {/* AQI Toggle */}
+          <button
+            onClick={() => toggleLayer('aqi')}
+            className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.aqi ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
+          >
+            <span>🌫️</span>
+            AQI Air Quality ({(civicLayers.aqiStations || []).length})
+          </button>
+
+          {/* Traffic Toggle */}
+          <button
+            onClick={() => toggleLayer('traffic')}
+            className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.traffic ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
+          >
+            <span>🚗</span>
+            Traffic Delays ({(civicLayers.trafficCorridors || []).length})
+          </button>
+
+          {/* Power Outages Toggle */}
+          <button
+            onClick={() => toggleLayer('power')}
+            className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.power ? 'bg-purple-50 border-purple-200 text-purple-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
+          >
+            <span>⚡</span>
+            Power Outages ({(civicLayers.powerOutages || []).length})
+          </button>
+
+          {/* Ward Polygons Toggle */}
+          <button
+            onClick={() => toggleLayer('wards')}
+            className={`px-2.5 py-1 rounded-lg border font-semibold flex items-center gap-1.5 transition ${activeLayers.wards ? 'bg-cyan-50 border-cyan-200 text-cyan-800' : 'bg-slate-100/60 border-slate-200 text-slate-400 line-through'}`}
+          >
+            <span>🏛️</span>
+            Ward Polygons
+          </button>
+        </div>
+
+        {/* Status Filter for issues */}
+        <div className="flex items-center gap-1.5 border-t sm:border-t-0 sm:border-l sm:pl-3 border-slate-200">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Status:</span>
+          {['ALL', 'OPEN', 'RESOLVED'].map(st => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              className={`px-2 py-0.5 rounded text-[11px] font-bold transition ${
+                statusFilter === st 
+                  ? 'bg-indigo-600 text-white shadow-2xs' 
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+              }`}
+            >
+              {st === 'ALL' ? 'All' : st === 'OPEN' ? 'Open Backlog' : 'Resolved'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Main Map & Civic Pulse Split Layout */}
@@ -315,6 +573,7 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
         {/* Large Dedicated Interactive Map Container */}
         <div className="lg:col-span-8 relative h-[440px] sm:h-[500px] lg:h-[620px] w-full border-b lg:border-b-0 lg:border-r border-slate-200">
           <MapContainer 
+            preferCanvas={true}
             center={mapCenter} 
             zoom={mapZoom} 
             scrollWheelZoom={true} 
@@ -329,11 +588,16 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
 
             {/* 1. Ward GeoJSON Layer */}
             {activeLayers.wards && geojson && (
-              <GeoJSON data={geojson} onEachFeature={onEachWardFeature} />
+              <GeoJSON 
+                key={`geojson-${selectedZone}-${selectedWardCode}`}
+                data={geojson} 
+                style={getWardStyle}
+                onEachFeature={onEachWardFeature} 
+              />
             )}
 
             {/* 2. Civic Complaints Layer */}
-            {activeLayers.complaints && issues.map(issue => (
+            {activeLayers.complaints && displayedIssues.map(issue => (
               <Marker
                 key={`issue-${issue.id}`}
                 position={[issue.latitude, issue.longitude]}
@@ -604,17 +868,69 @@ export default function CivicInteractiveMap({ initialIssues = [], title = "Jaipu
               )}
 
               {selectedItem.type === 'WARD' && (
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-950">
-                    <div className="font-bold">Parshad: {selectedItem.parshadName}</div>
-                    <div className="text-[11px] text-slate-500">Party: {selectedItem.party || 'Independent'} • Phone: {selectedItem.parshadPhone || 'N/A'}</div>
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl text-slate-800 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-indigo-900 text-xs">Parshad Representative</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        {selectedItem.party || 'Independent'}
+                      </span>
+                    </div>
+                    <div className="font-bold text-slate-900 text-sm">{selectedItem.parshadName}</div>
+                    {selectedItem.parshadPhone && (
+                      <div className="flex items-center gap-1.5 pt-0.5">
+                        <span className="text-slate-500 text-[11px]">Direct Contact:</span>
+                        <a 
+                          href={`tel:${selectedItem.parshadPhone}`}
+                          className="font-mono font-bold text-indigo-700 hover:text-indigo-900 underline"
+                        >
+                          +91 {selectedItem.parshadPhone}
+                        </a>
+                      </div>
+                    )}
                   </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                      <span className="text-slate-400 block text-[10px] font-semibold">Population</span>
+                      <span className="font-bold text-slate-800">{selectedItem.population ? selectedItem.population.toLocaleString() : '42,000'}</span>
+                    </div>
+                    <div className="p-2 bg-slate-50 border border-slate-200 rounded-lg">
+                      <span className="text-slate-400 block text-[10px] font-semibold">Ward Area</span>
+                      <span className="font-bold text-slate-800">{selectedItem.area_sq_km || 4.5} km²</span>
+                    </div>
+                  </div>
+
                   {selectedItem.riskAlert && (
-                    <div className="p-2 bg-rose-50 border border-rose-200 text-rose-900 rounded font-semibold text-[11px]">
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-900 rounded-lg font-semibold text-[11px]">
                       ⚠️ {selectedItem.riskAlert}
                     </div>
                   )}
-                  <p className="text-slate-600 font-medium">{selectedItem.description}</p>
+
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedItem.description}</p>
+
+                  <div className="pt-1 flex flex-col gap-1.5">
+                    <button
+                      onClick={() => {
+                        if (selectedWardCode === selectedItem.code) {
+                          setSelectedWardCode(null);
+                        } else {
+                          setSelectedWardCode(selectedItem.code);
+                        }
+                      }}
+                      className="w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition"
+                    >
+                      {selectedWardCode === selectedItem.code ? 'Clear Ward Filter (Show All)' : `Filter Map to ${selectedItem.code}`}
+                    </button>
+                    {adminMode && (
+                      <a
+                        href="/admin/authorities"
+                        className="w-full py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs text-center border border-slate-300 transition"
+                      >
+                        Configure Ward Authority Routing &rarr;
+                      </a>
+                    )}
+                  </div>
                 </div>
               )}
 

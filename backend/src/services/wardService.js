@@ -11,6 +11,22 @@ async function getWardsGeoJSON() {
   const db = await getDB();
   const dbWards = await db.all('SELECT * FROM wards');
   
+  // Load data/wards.geojson for rich properties (zone, parshad details, etc.)
+  const filePath = path.join(__dirname, '../../../data/wards.geojson');
+  let fileLookup = {};
+  if (fs.existsSync(filePath)) {
+    try {
+      const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      (raw.features || []).forEach(f => {
+        if (f.properties?.code) {
+          fileLookup[f.properties.code] = f.properties;
+        }
+      });
+    } catch (e) {
+      console.warn('Could not parse wards.geojson fallback:', e.message);
+    }
+  }
+  
   if (dbWards && dbWards.length > 0) {
     const features = dbWards.map(w => {
       let geom;
@@ -19,6 +35,7 @@ async function getWardsGeoJSON() {
       } catch (e) {
         geom = null;
       }
+      const fileProps = fileLookup[w.code] || {};
       return {
         type: 'Feature',
         id: w.id,
@@ -28,7 +45,12 @@ async function getWardsGeoJSON() {
           code: w.code,
           description: w.description,
           population: w.population,
-          area_sq_km: w.area_sq_km
+          area_sq_km: w.area_sq_km,
+          zone: fileProps.zone || 'Jaipur Municipal Corporation',
+          parshad_name: fileProps.parshad_name || 'Elected Ward Parshad',
+          parshad_phone: fileProps.parshad_phone || '',
+          party: fileProps.party || 'Independent',
+          ...fileProps
         },
         geometry: geom
       };
@@ -41,7 +63,6 @@ async function getWardsGeoJSON() {
   }
 
   // Fallback to data/wards.geojson
-  const filePath = path.join(__dirname, '../../../data/wards.geojson');
   if (fs.existsSync(filePath)) {
     const raw = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(raw);
