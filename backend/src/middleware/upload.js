@@ -2,9 +2,14 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+const uploadsDir = isServerless ? '/tmp/uploads' : path.join(__dirname, '../../uploads');
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn('Upload directory initialization notice:', e.message);
 }
 
 const storage = multer.diskStorage({

@@ -9,12 +9,29 @@ let dbInstance = null;
 async function getDB() {
   if (dbInstance) return dbInstance;
 
-  const dbDir = path.join(__dirname, '../../database');
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.LAMBDA_TASK_ROOT);
+  const dbDir = isServerless ? '/tmp/citywise_db' : path.join(__dirname, '../../database');
   if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
+    try {
+      fs.mkdirSync(dbDir, { recursive: true });
+    } catch (e) {
+      console.warn('DB directory mkdir notice:', e.message);
+    }
   }
 
-  const dbPath = process.env.DB_PATH || path.join(dbDir, 'citywise.sqlite');
+  const dbPath = isServerless 
+    ? path.join(dbDir, 'citywise.sqlite')
+    : (process.env.DB_PATH || path.join(dbDir, 'citywise.sqlite'));
+
+  // On serverless, copy bundled pre-seeded sqlite database to /tmp if it exists
+  const bundledDb = path.join(__dirname, '../../database/citywise.sqlite');
+  if (isServerless && !fs.existsSync(dbPath) && fs.existsSync(bundledDb)) {
+    try {
+      fs.copyFileSync(bundledDb, dbPath);
+    } catch (e) {
+      console.warn('Could not copy bundled sqlite to /tmp:', e.message);
+    }
+  }
 
   dbInstance = await open({
     filename: dbPath,

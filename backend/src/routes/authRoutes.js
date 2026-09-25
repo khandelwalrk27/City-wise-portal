@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getDB } = require('../config/db');
+const { getDB, isSupabaseConfigured, getSupabaseClient } = require('../config/db');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 
 // Register User
@@ -65,13 +65,52 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
+    const cleanEmail = email.toLowerCase().trim();
+
+    // 1. Try Supabase first if configured
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: sbUser, error: sbErr } = await supabase
+          .from('users')
+          .select('id, name, email, password_hash, role, authority_id, phone, avatar_url, authorities:authority_id(name)')
+          .eq('email', cleanEmail)
+          .maybeSingle();
+
+        if (sbUser && !sbErr) {
+          const isMatch = await bcrypt.compare(password, sbUser.password_hash);
+          if (!isMatch) {
+            return res.status(401).json({ error: 'Invalid email or password.' });
+          }
+
+          const token = jwt.sign(
+            { id: sbUser.id, email: sbUser.email, role: sbUser.role, authority_id: sbUser.authority_id },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+          );
+
+          const { password_hash, authorities, ...userWithoutPassword } = sbUser;
+          userWithoutPassword.authority_name = authorities ? authorities.name : null;
+
+          return res.json({
+            message: 'Login successful',
+            token,
+            user: userWithoutPassword
+          });
+        }
+      } catch (sbEx) {
+        console.warn('Supabase login notice, falling back to SQLite:', sbEx.message);
+      }
+    }
+
+    // 2. Local SQLite fallback
     const db = await getDB();
     const user = await db.get(
       `SELECT u.*, a.name as authority_name
        FROM users u
        LEFT JOIN authorities a ON u.authority_id = a.id
        WHERE u.email = ?`,
-      [email.toLowerCase().trim()]
+      [cleanEmail]
     );
 
     if (!user) {
@@ -98,13 +137,32 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Error in /login:', err);
-    return res.status(500).json({ error: 'Internal server error during login.' });
+    return res.status(500).json({ error: 'Internal server error during login: ' + err.message });
   }
 });
 
 // Get Current Profile
 router.get('/me', authenticateToken, async (req, res) => {
   try {
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabaseClient();
+        const { data: sbUser, error: sbErr } = await supabase
+          .from('users')
+          .select('id, name, email, role, authority_id, phone, avatar_url, created_at, authorities:authority_id(name)')
+          .eq('id', req.user.id)
+          .maybeSingle();
+
+        if (sbUser && !sbErr) {
+          const { authorities, ...userWithoutPassword } = sbUser;
+          userWithoutPassword.authority_name = authorities ? authorities.name : null;
+          return res.json({ user: userWithoutPassword });
+        }
+      } catch (sbEx) {
+        console.warn('Supabase /me notice, falling back to SQLite:', sbEx.message);
+      }
+    }
+
     const db = await getDB();
     const user = await db.get(
       `SELECT u.id, u.name, u.email, u.role, u.authority_id, u.phone, u.avatar_url, u.created_at, a.name as authority_name
@@ -120,7 +178,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 
     return res.json({ user });
   } catch (err) {
-    return res.status(500).json({ error: 'Error fetching profile.' });
+    return res.status(500).json({ error: 'Error fetching profile: ' + err.message });
   }
 });
 
