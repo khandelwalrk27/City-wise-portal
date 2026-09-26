@@ -1,32 +1,89 @@
+# ==========================================
+# CityWise Project Git Ignore Configuration
+# ==========================================
+
 # Dependencies
 node_modules/
+**/node_modules/
 package-lock.json
 
-# Environment Variables & Secrets
+# Environment Variables & Secret Configurations
 .env
-.env.local
+.env.*
 *.env
+backend/.env
+frontend/.env
+!.env.example
 
-# SQLite Database
+# Vercel Deployment & Build Cache
+.vercel/
+**/.vercel/
+
+# Ephemeral & Scratch Directories
+scratch/
+
+# SQLite Local Database Files
 *.sqlite
 *.sqlite3
-backend/database/
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-wal
+*.db-shm
+backend/database/*
+!backend/database/.gitkeep
 
-# File Uploads & Temp Files
+# User-Uploaded Media (Preserve directory structure via .gitkeep)
 backend/uploads/*
 !backend/uploads/.gitkeep
+uploads/
 
-# Build Artifacts
+# Build & Compilation Artifacts
+dist/
+**/dist/
+build/
+**/build/
 frontend/dist/
 frontend/build/
-*.zip
+.vite/
+*.tsbuildinfo
 
-# Logs
+# Archive & Bundle Files
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+backend.zip
+
+# Runtime Logs & PIDs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.pid
+*.seed
+*.pid.lock
 
-# OS / Editor Files
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Operating System Files
 .DS_Store
+.DS_Store?
+._*
 Thumbs.db
-.vscode/
+ehthumbs.db
+Desktop.ini
+
+# IDE & Editor Files
 .idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
