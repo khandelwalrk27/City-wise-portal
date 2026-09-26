@@ -233,6 +233,16 @@ async function initTables(db) {
     CREATE INDEX IF NOT EXISTS idx_status_history_issue ON status_histories(issue_id);
     CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
   `);
+
+  try {
+    const catCount = await db.get('SELECT COUNT(*) as count FROM categories');
+    if (!catCount || catCount.count === 0) {
+      const { seedDatabase } = require('../seed/seedData');
+      await seedDatabase();
+    }
+  } catch (e) {
+    console.warn('Auto-seed check notice:', e.message);
+  }
 }
 
 module.exports = { 

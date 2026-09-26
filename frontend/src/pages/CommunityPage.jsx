@@ -4,6 +4,7 @@ import { Search, Filter, ThumbsUp, MapPin } from 'lucide-react';
 import api from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 import { useAuth } from '../context/AuthContext';
+import { getCivicThumbnail } from '../utils/civicImages';
 
 export default function CommunityPage() {
   const { user } = useAuth();
@@ -140,12 +141,17 @@ export default function CommunityPage() {
           {issues.map(issue => (
             <div key={issue.id} className="bg-white rounded-2xl overflow-hidden flex flex-col justify-between border border-slate-200 shadow-xs hover:border-slate-300 transition">
               
-              {/* Optional Thumbnail Image */}
-              {issue.primary_image && (
-                <div className="h-44 w-full bg-slate-100 overflow-hidden">
-                  <img src={issue.primary_image} alt={issue.title} className="w-full h-full object-cover" />
-                </div>
-              )}
+              {/* Category-Relevant Civic Thumbnail Image */}
+              <div className="h-44 w-full bg-slate-100 overflow-hidden relative">
+                <img 
+                  src={getCivicThumbnail(issue)} 
+                  alt={issue.title} 
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                />
+                <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold">
+                  {issue.category_name || 'Civic Infrastructure'}
+                </span>
+              </div>
 
               <div className="p-5 space-y-3">
                 <div className="flex items-center justify-between gap-2">

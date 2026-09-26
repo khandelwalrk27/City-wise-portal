@@ -40,6 +40,15 @@ router.post('/detect', async (req, res) => {
     }
 
     const result = await getWardFromCoordinates(latitude, longitude);
+    if (result.ward) {
+      const db = await getDB();
+      const dbWard = await db.get('SELECT id, name, code, description FROM wards WHERE id = ? OR code = ?', [result.ward.id, result.ward.code]);
+      if (dbWard) {
+        result.ward.id = dbWard.id;
+        result.ward.name = dbWard.name;
+        result.ward.code = dbWard.code;
+      }
+    }
     return res.json(result);
   } catch (err) {
     console.error('Ward detection error:', err);

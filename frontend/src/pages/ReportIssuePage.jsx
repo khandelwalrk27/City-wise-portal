@@ -139,7 +139,9 @@ export default function ReportIssuePage() {
       alert('Civic issue reported successfully and saved to database!');
       navigate(`/issues/${res.data.issue.id}`);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to submit issue');
+      console.error('Issue submission error:', err);
+      const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to submit issue';
+      setError(typeof msg === 'string' ? msg : JSON.stringify(msg));
     } finally {
       setSubmitting(false);
     }

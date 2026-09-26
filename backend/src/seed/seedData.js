@@ -8,6 +8,7 @@ async function seedDatabase() {
   const db = await getDB();
 
   // Clear existing records safely
+  await db.exec('PRAGMA foreign_keys = OFF;');
   await db.exec('DELETE FROM notifications;');
   await db.exec('DELETE FROM supports;');
   await db.exec('DELETE FROM status_histories;');
@@ -19,6 +20,7 @@ async function seedDatabase() {
   await db.exec('DELETE FROM wards;');
   await db.exec('DELETE FROM users;');
   await db.exec('DELETE FROM authorities;');
+  await db.exec('PRAGMA foreign_keys = ON;');
 
   const passwordHash = await bcrypt.hash('password123', 10);
   const adminPasswordHash = await bcrypt.hash('admin123', 10);
@@ -130,7 +132,9 @@ async function seedDatabase() {
       description: 'Rain monsoon drainage blockage causing 2 feet water accumulation near Khatipura crossing.',
       catCode: 'waterlogging', wardCode: 'JP-WARD-043', authCode: 'NNJ-WATER', citizenEmail: 'pooja@citywise.org',
       status: 'IN_PROGRESS', priority: 'CRITICAL', lat: 26.9400, lng: 75.7400, address: 'Khatipura Flyover Junction, Jhotwara, Jaipur',
-      mediaUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=800&q=80'
+      mediaUrl: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=800&q=80',
+      resolutionUrl: 'https://images.unsplash.com/photo-1545459720-aac8509eb02c?auto=format&fit=crop&w=800&q=80',
+      resNotes: 'Submersible suction pump deployed by PHED water wing. Storm drain blockage cleared.'
     },
     {
       title: 'Uncollected garbage dump behind Textile Market, Sanganer',
@@ -145,7 +149,10 @@ async function seedDatabase() {
       title: 'Dark streetlight stretch on Sector 2 Main Road, Vidhyadhar Nagar',
       description: '5 LED street poles non-operational for 4 nights, raising safety concerns for pedestrians.',
       catCode: 'streetlights', wardCode: 'JP-WARD-001', authCode: 'NNJ-LIGHT', citizenEmail: 'pooja@citywise.org',
-      status: 'ASSIGNED', priority: 'MEDIUM', lat: 26.9600, lng: 75.7700, address: 'Sector 2 Main Road, Vidhyadhar Nagar, Jaipur'
+      status: 'ASSIGNED', priority: 'MEDIUM', lat: 26.9600, lng: 75.7700, address: 'Sector 2 Main Road, Vidhyadhar Nagar, Jaipur',
+      mediaUrl: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=800&q=80',
+      resolutionUrl: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=800&q=80',
+      resNotes: 'JDA electrical wing replaced 5 non-functional sodium vapour fixtures with 90W smart LED luminaires.'
     },
     {
       title: 'Open sewer line near Ajmer Road entrance, Bagru Expressway',
@@ -153,13 +160,17 @@ async function seedDatabase() {
       catCode: 'drainage', wardCode: 'JP-WARD-104', authCode: 'NNJ-DRAIN', citizenEmail: 'citizen@citywise.org',
       status: 'REOPENED', priority: 'CRITICAL', lat: 26.8700, lng: 75.7000, address: 'Ajmer Road Service Lane, Bagru Zone, Jaipur',
       mediaUrl: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
+      resolutionUrl: 'https://images.unsplash.com/photo-1590496793929-36417d3117de?auto=format&fit=crop&w=800&q=80',
       resNotes: 'Drain unclogged, but citizen requested concrete cover replacement for permanent resolution.'
     },
     {
       title: 'Damaged pavement tiles near Apex Circle, Malviya Nagar',
       description: 'Broken pedestrian footpath pavers near Fortis Hospital crossing.',
       catCode: 'potholes', wardCode: 'JP-WARD-142', authCode: 'NNJ-ROAD', citizenEmail: 'pooja@citywise.org',
-      status: 'REPORTED', priority: 'LOW', lat: 26.8600, lng: 75.8600, address: 'Apex Circle Footpath, Malviya Nagar, Jaipur'
+      status: 'REPORTED', priority: 'LOW', lat: 26.8600, lng: 75.8600, address: 'Apex Circle Footpath, Malviya Nagar, Jaipur',
+      mediaUrl: 'https://images.unsplash.com/photo-1578885136359-16c8bd4d3a8e?auto=format&fit=crop&w=800&q=80',
+      resolutionUrl: 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=800&q=80',
+      resNotes: 'PWD pedestrian infrastructure division relaid 25 sq.m of heavy-duty interlocking pavers with new curb stones.'
     }
   ];
 

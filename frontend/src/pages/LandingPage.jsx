@@ -5,6 +5,7 @@ import api from '../services/api';
 import CivicInteractiveMap from '../components/CivicInteractiveMap';
 import StatusBadge from '../components/StatusBadge';
 import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
+import { getCivicThumbnail } from '../utils/civicImages';
 
 export default function LandingPage() {
   const [stats, setStats] = useState({ totalIssues: 24, resolvedIssues: 18, avgResolutionHours: 14.5 });
@@ -143,19 +144,30 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {recentIssues.slice(0, 6).map(issue => (
-            <div key={issue.id} className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between space-y-4 hover:border-slate-300 shadow-sm transition">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-2">
+            <div key={issue.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-300 shadow-sm transition">
+              <div className="h-40 w-full bg-slate-100 overflow-hidden relative">
+                <img 
+                  src={getCivicThumbnail(issue)} 
+                  alt={issue.title} 
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                />
+                <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold">
+                  {issue.category_name || 'Jaipur Ward'}
+                </span>
+              </div>
+
+              <div className="p-5 space-y-2">
+                <div className="flex items-center justify-between gap-2 mb-1">
                   <StatusBadge status={issue.status} />
                   <span className="text-[10px] text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                     {issue.ward_name || 'Jaipur Ward'}
                   </span>
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 line-clamp-1">{issue.title}</h3>
-                <p className="text-xs text-slate-600 line-clamp-2 mt-1">{issue.description}</p>
+                <p className="text-xs text-slate-600 line-clamp-2 font-medium">{issue.description}</p>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-xs bg-slate-50/50">
                 <span className="text-slate-500 truncate max-w-[160px] font-medium">{issue.address || 'Jaipur'}</span>
                 <Link to={`/issues/${issue.id}`} className="text-indigo-600 font-bold hover:underline">
                   View Timeline &rarr;

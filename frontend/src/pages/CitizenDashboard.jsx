@@ -6,6 +6,7 @@ import StatusBadge from '../components/StatusBadge';
 import PredictiveRiskWidget from '../components/PredictiveRiskWidget';
 import CivicInteractiveMap from '../components/CivicInteractiveMap';
 import { PlusCircle, AlertTriangle, CheckCircle2, Clock, ArrowRight, ShieldAlert } from 'lucide-react';
+import { getCivicThumbnail } from '../utils/civicImages';
 
 export default function CitizenDashboard() {
   const { user } = useAuth();
@@ -141,19 +142,30 @@ export default function CitizenDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {issues.slice(0, 4).map(issue => (
-              <div key={issue.id} className="bg-white border border-slate-200 p-5 rounded-2xl flex flex-col justify-between space-y-4 shadow-sm hover:border-slate-300 transition">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
+              <div key={issue.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col justify-between shadow-sm hover:border-slate-300 transition">
+                <div className="h-36 w-full bg-slate-100 overflow-hidden relative">
+                  <img 
+                    src={getCivicThumbnail(issue)} 
+                    alt={issue.title} 
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" 
+                  />
+                  <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/65 backdrop-blur-xs text-white text-[10px] font-bold">
+                    {issue.category_name || 'Jaipur Ward'}
+                  </span>
+                </div>
+
+                <div className="p-5 space-y-2">
+                  <div className="flex items-center justify-between mb-1">
                     <StatusBadge status={issue.status} />
                     <span className="text-[10px] text-amber-900 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                       {issue.ward_name || 'Jaipur Ward'}
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-slate-900">{issue.title}</h3>
-                  <p className="text-xs text-slate-600 line-clamp-2 mt-1 font-medium">{issue.description}</p>
+                  <h3 className="text-sm font-bold text-slate-900 line-clamp-1">{issue.title}</h3>
+                  <p className="text-xs text-slate-600 line-clamp-2 font-medium">{issue.description}</p>
                 </div>
 
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-xs bg-slate-50/50">
                   <span className="text-slate-500 font-medium">{issue.address || 'Jaipur'}</span>
                   <Link to={`/issues/${issue.id}`} className="text-indigo-600 font-bold flex items-center gap-1 hover:underline">
                     Timeline & Evidence <ArrowRight className="w-3.5 h-3.5" />

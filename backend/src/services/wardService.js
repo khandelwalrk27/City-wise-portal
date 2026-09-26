@@ -35,11 +35,14 @@ async function getWardsGeoJSON() {
       } catch (e) {
         geom = null;
       }
-      const fileProps = fileLookup[w.code] || {};
+      const rawProps = fileLookup[w.code] || {};
+      const { id: _ignoredWardNumber, ...fileProps } = rawProps;
       return {
         type: 'Feature',
         id: w.id,
         properties: {
+          ...fileProps,
+          ward_number: rawProps.id || null,
           id: w.id,
           name: w.name,
           code: w.code,
@@ -49,8 +52,7 @@ async function getWardsGeoJSON() {
           zone: fileProps.zone || 'Jaipur Municipal Corporation',
           parshad_name: fileProps.parshad_name || 'Elected Ward Parshad',
           parshad_phone: fileProps.parshad_phone || '',
-          party: fileProps.party || 'Independent',
-          ...fileProps
+          party: fileProps.party || 'Independent'
         },
         geometry: geom
       };
@@ -91,9 +93,28 @@ async function getWardFromCoordinates(lat, lng) {
 
     try {
       if (booleanPointInPolygon(pt, feature)) {
+        let matchedId = feature.properties.id || feature.id;
+        const code = feature.properties.code;
+        try {
+          const db = await getDB();
+          const dbMatch = await db.get('SELECT id, name, code, description FROM wards WHERE code = ? OR id = ?', [code, matchedId]);
+          if (dbMatch) {
+            return {
+              ward: {
+                id: dbMatch.id,
+                name: dbMatch.name,
+                code: dbMatch.code,
+                description: dbMatch.description
+              },
+              isManual: false
+            };
+          }
+        } catch (e) {
+          // ignore fallback
+        }
         return {
           ward: {
-            id: feature.properties.id || feature.id,
+            id: matchedId,
             name: feature.properties.name,
             code: feature.properties.code,
             description: feature.properties.description

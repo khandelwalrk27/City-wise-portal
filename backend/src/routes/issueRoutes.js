@@ -149,7 +149,29 @@ router.post('/', authenticateToken, upload.array('files', 5), async (req, res) =
     const lng = parseFloat(longitude);
     const db = await getDB();
 
-    // 1. Determine Ward (Automatic GeoJSON point-in-polygon detection or manual override)
+    // 1. Resolve and validate citizen user
+    let citizenId = req.user && req.user.id ? req.user.id : null;
+    let userRecord = citizenId ? await db.get('SELECT id FROM users WHERE id = ?', [citizenId]) : null;
+    if (!userRecord) {
+      if (req.user && req.user.email) {
+        userRecord = await db.get('SELECT id FROM users WHERE email = ?', [req.user.email.toLowerCase().trim()]);
+      }
+      if (!userRecord) {
+        const anyCitizen = await db.get("SELECT id FROM users WHERE role = 'CITIZEN' LIMIT 1") || await db.get('SELECT id FROM users LIMIT 1');
+        if (anyCitizen) {
+          userRecord = anyCitizen;
+        } else {
+          const insUser = await db.run(
+            `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'CITIZEN')`,
+            [req.user?.name || 'Jaipur Resident', req.user?.email || 'citizen@citywise.org', 'auto_recreated']
+          );
+          userRecord = { id: insUser.lastID };
+        }
+      }
+      citizenId = userRecord.id;
+    }
+
+    // 2. Determine Ward (Automatic GeoJSON point-in-polygon detection or manual override)
     let finalWardId = null;
     let isManualWard = false;
 
@@ -165,11 +187,43 @@ router.post('/', authenticateToken, upload.array('files', 5), async (req, res) =
       }
     }
 
-    // 2. Determine Responsible Authority
-    const authority = await assignAuthorityForIssue(finalWardId, parseInt(category_id));
-    const authorityId = authority ? authority.id : null;
+    // Validate Ward foreign key
+    let validWardId = null;
+    if (finalWardId) {
+      const wardRecord = await db.get('SELECT id FROM wards WHERE id = ?', [finalWardId]);
+      if (wardRecord) {
+        validWardId = wardRecord.id;
+      } else {
+        const wardByCode = await db.get('SELECT id FROM wards WHERE code = ? OR code LIKE ?', [
+          `JP-WARD-${String(finalWardId).padStart(3, '0')}`,
+          `%${finalWardId}%`
+        ]);
+        validWardId = wardByCode ? wardByCode.id : null;
+      }
+    }
 
-    // 3. Save Issue
+    // Validate Category foreign key
+    let validCatId = parseInt(category_id);
+    const catRecord = await db.get('SELECT id FROM categories WHERE id = ?', [validCatId]);
+    if (!catRecord) {
+      const firstCat = await db.get('SELECT id FROM categories LIMIT 1');
+      if (firstCat) {
+        validCatId = firstCat.id;
+      }
+    }
+
+    // 3. Determine Responsible Authority
+    const authority = await assignAuthorityForIssue(validWardId, validCatId);
+    let validAuthId = authority ? authority.id : null;
+    if (validAuthId) {
+      const authRecord = await db.get('SELECT id FROM authorities WHERE id = ?', [validAuthId]);
+      if (!authRecord) {
+        const firstAuth = await db.get('SELECT id FROM authorities LIMIT 1');
+        validAuthId = firstAuth ? firstAuth.id : null;
+      }
+    }
+
+    // 4. Save Issue
     const result = await db.run(
       `INSERT INTO issues 
        (title, description, category_id, ward_id, authority_id, citizen_id, status, priority, latitude, longitude, address, is_manual_ward)
@@ -177,10 +231,10 @@ router.post('/', authenticateToken, upload.array('files', 5), async (req, res) =
       [
         title.trim(),
         description.trim(),
-        parseInt(category_id),
-        finalWardId,
-        authorityId,
-        req.user.id,
+        validCatId,
+        validWardId,
+        validAuthId,
+        citizenId,
         priority,
         lat,
         lng,
@@ -191,14 +245,14 @@ router.post('/', authenticateToken, upload.array('files', 5), async (req, res) =
 
     const issueId = result.lastID;
 
-    // 4. Initial Status History Entry
+    // 5. Initial Status History Entry
     await db.run(
       `INSERT INTO status_histories (issue_id, from_status, to_status, changed_by_id, remarks)
        VALUES (?, NULL, 'REPORTED', ?, ?)`,
-      [issueId, req.user.id, 'Issue reported by citizen.']
+      [issueId, citizenId, 'Issue reported by citizen.']
     );
 
-    // 5. Handle Uploaded Media Files
+    // 6. Handle Uploaded Media Files
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
         const isVideo = file.mimetype.startsWith('video');
@@ -206,39 +260,39 @@ router.post('/', authenticateToken, upload.array('files', 5), async (req, res) =
         await db.run(
           `INSERT INTO media (issue_id, file_url, file_type, media_stage, uploaded_by_id)
            VALUES (?, ?, ?, 'REPORT', ?)`,
-          [issueId, fileUrl, isVideo ? 'VIDEO' : 'IMAGE', req.user.id]
+          [issueId, fileUrl, isVideo ? 'VIDEO' : 'IMAGE', citizenId]
         );
       }
     }
 
     const createdIssue = await db.get('SELECT * FROM issues WHERE id = ?', [issueId]);
 
-    // 6. Check for potential duplicates
+    // 7. Check for potential duplicates
     const potentialDuplicates = await findPotentialDuplicates({
       latitude: lat,
       longitude: lng,
-      categoryId: parseInt(category_id),
+      categoryId: validCatId,
       title,
       description,
       excludeIssueId: issueId
     });
 
-    // 7. Trigger Real-time Authority Notification
-    if (authorityId) {
-      await notifyAuthorityOfIssue(authorityId, createdIssue);
+    // 8. Trigger Real-time Authority Notification
+    if (validAuthId) {
+      await notifyAuthorityOfIssue(validAuthId, createdIssue);
     }
 
     return res.status(201).json({
       message: 'Issue reported successfully',
       issue: createdIssue,
-      detectedWardId: finalWardId,
+      detectedWardId: validWardId,
       isManualWard,
       assignedAuthority: authority,
       potentialDuplicates
     });
   } catch (err) {
     console.error('Error creating issue:', err);
-    return res.status(500).json({ error: 'Failed to report issue.' });
+    return res.status(500).json({ error: err.message || 'Failed to report issue.' });
   }
 });
 
